@@ -1,0 +1,2 @@
+"*.{js,jsx,mjs,ts,tsx,mts,mdx}": ["biome check --write", "biome format --write"]
+"*.{json,md,css,html,yml,yaml,scss}": ["biome format --write"]
