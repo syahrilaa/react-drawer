@@ -5,12 +5,14 @@
   "author": "Syahril Akbar Atthoriq <syahrilakbaraa@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "build": "bun run check-types && vite build",
     "check-types": "tsc --noEmit",
     "format": "biome format --write",
     "lint": "biome lint --write"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
+    "@microsoft/api-extractor": "^7.60.1",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
