@@ -4,6 +4,16 @@
   "private": false,
   "author": "Syahril Akbar Atthoriq <syahrilakbaraa@gmail.com>",
   "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "build": "bun run check-types && vite build",
     "check-types": "tsc --noEmit",
