@@ -27,7 +27,6 @@ const config = defineConfig({
     },
     rollupOptions: {
       platform: "browser",
-
       external: ["react", "react/jsx-runtime", "react-dom"],
     },
   },

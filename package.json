@@ -4,11 +4,22 @@
   "private": false,
   "author": "Syahril Akbar Atthoriq <syahrilakbaraa@gmail.com>",
   "license": "MIT",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "build": "bun run check-types && vite build",
     "check-types": "tsc --noEmit",
-    "format": "biome format --write",
-    "lint": "biome lint --write",
+    "format": "biome format --write .",
+    "lint": "biome check --write .",
+    "check": "biome check .",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -33,5 +44,8 @@
   "engines": {
     "node": ">24"
   },
-  "packageManager": "bun@1.4.4"
+  "packageManager": "bun@1.4.4",
+  "dependencies": {
+    "@radix-ui/react-slot": "^1.5.0"
+  }
 }
