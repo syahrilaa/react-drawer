@@ -142,7 +142,10 @@ export const useDrawerDrag = ({
     const currentIndex = snapPoints.indexOf(resolvedSnapPoint);
     const nextIndex = event.key === increaseKey ? currentIndex + 1 : currentIndex - 1;
     if (nextIndex < 0) onOpenChangeRef.current(false);
-    else if (nextIndex < snapPoints.length) setActiveSnapPoint(snapPoints[nextIndex]);
+    else if (nextIndex < snapPoints.length) {
+      const nextSnapPoint = snapPoints[nextIndex];
+      if (nextSnapPoint !== undefined) setActiveSnapPoint(nextSnapPoint);
+    }
   };
 
   return {

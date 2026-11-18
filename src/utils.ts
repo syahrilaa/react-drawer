@@ -1,3 +1,5 @@
+import * as React from "react";
+
 const FOCUSABLE_SELECTOR = [
   "a[href]",
   "area[href]",
