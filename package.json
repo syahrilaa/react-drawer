@@ -8,7 +8,8 @@
     "build": "bun run check-types && vite build",
     "check-types": "tsc --noEmit",
     "format": "biome format --write",
-    "lint": "biome lint --write"
+    "lint": "biome lint --write",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
