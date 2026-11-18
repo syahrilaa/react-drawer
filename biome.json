@@ -1,0 +1,101 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.8/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "root": ".",
+    "useIgnoreFile": true
+  },
+  "css": {
+    "parser": {
+      "cssModules": true
+    }
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["**/*", "!!**/node_modules", "!!**/dist"]
+  },
+  "formatter": {
+    "enabled": true,
+    "lineWidth": 120,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf"
+  },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "react": "recommended"
+    },
+    "rules": {
+      "preset": "recommended",
+      "a11y": {
+        "useAltText": "error",
+        "useKeyWithClickEvents": "warn"
+      },
+      "correctness": {
+        "noUnusedImports": "error",
+        "useExhaustiveDependencies": "error",
+        "useHookAtTopLevel": "error",
+        "useJsxKeyInIterable": "error",
+        "noProcessGlobal": "off",
+        "useImportExtensions": "off",
+        "noUnknownProperty": "error",
+        "noUnreachable": "error",
+        "noEmptyPattern": "error",
+        "noSwitchDeclarations": "error",
+        "noUnsafeOptionalChaining": "off"
+      },
+      "style": {
+        "noParameterAssign": "off",
+        "useNodejsImportProtocol": "error",
+        "noDefaultExport": "off",
+        "noProcessEnv": "off",
+        "useExportsLast": "off",
+        "noNestedTernary": "warn"
+      },
+      "complexity": {
+        "noExcessiveLinesPerFunction": {
+          "level": "warn",
+          "options": {
+            "maxLines": 150,
+            "skipBlankLines": true
+          }
+        },
+        "noImportantStyles": "off"
+      },
+      "performance": {
+        "noImgElement": "error"
+      },
+      "suspicious": {
+        "noDoubleEquals": "error",
+        "noAssignInExpressions": "error",
+        "useIterableCallbackReturn": "error",
+        "noImplicitAnyLet": "error",
+        "noRedeclare": "error",
+        "noControlCharactersInRegex": "error",
+        "noShadowRestrictedNames": "error",
+        "noAsyncPromiseExecutor": "error"
+      },
+      "nursery": {
+        "useTailwindShorthandClasses": "warn",
+        "useExplicitType": "off"
+      },
+      "security": {
+        "noBlankTarget": "error",
+        "noDangerouslySetInnerHtml": "warn"
+      }
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "javascript": {
+    "jsxRuntime": "transparent"
+  }
+}
