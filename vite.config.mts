@@ -7,15 +7,19 @@ import dts from "vite-plugin-dts";
 const __dirname = import.meta.dirname;
 const tsconfigPath = path.resolve(__dirname, "tsconfig.json");
 
-const config = defineConfig({
+const config = defineConfig(({ mode }) => ({
   plugins: [
     tailwindcss(),
     react({}),
-    dts({
-      include: ["src/**/*.{ts,tsx}"],
-      bundleTypes: true,
-      tsconfigPath: tsconfigPath,
-    }),
+    ...(mode === "library"
+      ? [
+          dts({
+            include: ["src/**/*.{ts,tsx}"],
+            bundleTypes: true,
+            tsconfigPath,
+          }),
+        ]
+      : []),
   ],
   build: {
     lib: {
@@ -33,6 +37,6 @@ const config = defineConfig({
     },
   },
   tsconfig: tsconfigPath,
-});
+}));
 
 export default config;
