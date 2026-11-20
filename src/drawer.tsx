@@ -12,7 +12,7 @@ import { useEscapeKeydown } from "./hooks/use-escape-keydown";
 import { usePresence } from "./hooks/use-motion";
 import { getFocusableElements, useIsomorphicLayoutEffect } from "./utils";
 
-type ScopedProps<Props> = Props & { __scopeDrawer: DrawerScope };
+type ScopedProps<Props> = Props & { __scopeDrawer?: DrawerScope };
 export type DrawerSide = "right" | "left" | "bottom";
 
 const [createDrawerContext, createDrawerScope] = createDrawerContextScope(COMPONENT_NAME.ROOT);
@@ -54,7 +54,7 @@ export interface DrawerRootProps {
   onActiveSnapPointChange?: (snapPoint: DrawerSnapPoint) => void;
 }
 
-export const DrawerRootImplementation: React.FC<ScopedProps<DrawerRootProps>> = ({
+export const DrawerRootImplementation: React.FC<DrawerRootProps> = ({
   children,
   open: openProp,
   defaultOpen = false,
@@ -66,7 +66,7 @@ export const DrawerRootImplementation: React.FC<ScopedProps<DrawerRootProps>> = 
   defaultActiveSnapPoint,
   onActiveSnapPointChange,
   __scopeDrawer,
-}) => {
+}: ScopedProps<DrawerRootProps>) => {
   const { __scopeDrawer: scope } = useDrawerScope(__scopeDrawer);
   const [open, setOpen] = useControllableState({
     value: openProp,
@@ -118,7 +118,7 @@ export const DrawerRootImplementation: React.FC<ScopedProps<DrawerRootProps>> = 
   );
 };
 
-export const DrawerRoot: React.FC<ScopedProps<DrawerRootProps>> = (props) => {
+export const DrawerRoot: React.FC<DrawerRootProps> = (props: ScopedProps<DrawerRootProps>) => {
   const isHasDrawerStack = useHasDrawerStackProvider();
   if (isHasDrawerStack) return <DrawerRootImplementation {...props} />;
 
@@ -203,9 +203,11 @@ export const DrawerOverlay: React.FC<DrawerOverlayProps> = ({
   const { __scopeDrawer: scope } = useDrawerScope(__scopeDrawer);
   const context = useDrawerContext(COMPONENT_NAME.OVERLAY, scope);
   const overlayRef = useComposedRefs(ref, context.overlayRef);
-  const { isTopmost } = context;
+  const { isTopmost, stackIndex } = context;
 
   if ((!context.present && !forceMount) || !context.modal) return null;
+
+  const computedZIndex = style?.zIndex ?? 40 + Math.max(0, stackIndex) * 20;
 
   return (
     <span
@@ -214,13 +216,14 @@ export const DrawerOverlay: React.FC<DrawerOverlayProps> = ({
       aria-hidden="true"
       data-state={context.open ? "open" : "closed"}
       data-side={context.side}
-      data-stack={context.stackIndex}
+      data-stack={stackIndex}
       data-topmost={isTopmost ? "true" : "false"}
       style={{
+        zIndex: computedZIndex,
         ...style,
-        pointerEvents: context.open ? style?.pointerEvents : "none",
+        pointerEvents: context.open && isTopmost ? (style?.pointerEvents ?? "auto") : "none",
       }}
-      onClick={(event: React.MouseEvent<HTMLDivElement>) => {
+      onClick={(event: React.MouseEvent<HTMLSpanElement>) => {
         if (onClick) onClick(event);
         if (context.open && !event.defaultPrevented && event.target === event.currentTarget && isTopmost) {
           context.setOpen(false);
@@ -253,13 +256,14 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
 }) => {
   const { __scopeDrawer: scope } = useDrawerScope(__scopeDrawer);
   const context = useDrawerContext(COMPONENT_NAME.CONTENT, scope);
-  const { isTopmost, stackIndex } = context;
+  const { isTopmost, stackIndex, isDragging, snapStyle } = context;
   const contentRef = useComposedRefs(ref, context.contentRef);
   const Comp = asChild ? Slot : "div";
   const onInteractOutsideRef = useCallbackRef(onInteractOutside);
   const onEscapeKeyDownRef = useCallbackRef(onEscapeKeyDownProp);
   const previouslyFocusedElementRef = React.useRef<HTMLElement | null>(null);
   const hadTopmostFocusRef = React.useRef(false);
+
   useEscapeKeydown((event) => {
     if (!context.open || !isTopmost) return;
     if (onEscapeKeyDownRef) onEscapeKeyDownRef(event);
@@ -269,16 +273,18 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
   }, context.open && isTopmost);
 
   useIsomorphicLayoutEffect(() => {
-    if (context.open && isTopmost && !hadTopmostFocusRef.current) {
-      previouslyFocusedElementRef.current =
-        document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      hadTopmostFocusRef.current = true;
+    if (context.open && isTopmost) {
+      if (!hadTopmostFocusRef.current) {
+        previouslyFocusedElementRef.current =
+          document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        hadTopmostFocusRef.current = true;
+      }
 
       const content = context.contentRef.current;
       const focusable = getFocusableElements(content);
       (focusable[0] ?? content)?.focus({ preventScroll: true });
     } else if (!context.open && hadTopmostFocusRef.current) {
-      if (isTopmost && previouslyFocusedElementRef.current?.isConnected) {
+      if (previouslyFocusedElementRef.current?.isConnected) {
         previouslyFocusedElementRef.current.focus({ preventScroll: true });
       }
       previouslyFocusedElementRef.current = null;
@@ -304,6 +310,22 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
 
   if (!context.present && !forceMount) return null;
 
+  const computedZIndex = style?.zIndex ?? 50 + Math.max(0, stackIndex) * 20;
+  const hasSnap = context.snapPoints.length > 0;
+  const snapTransition = hasSnap
+    ? isDragging
+      ? "none"
+      : "transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1), height 300ms cubic-bezier(0.2, 0.8, 0.2, 1)"
+    : style?.transition;
+
+  const mergedStyle: React.CSSProperties = {
+    zIndex: computedZIndex,
+    ...style,
+    ...snapStyle,
+    transition: snapTransition,
+    pointerEvents: context.open && isTopmost ? (style?.pointerEvents ?? "auto") : "none",
+  };
+
   return (
     <Comp
       {...props}
@@ -321,12 +343,8 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
       data-stack-index={stackIndex}
       data-topmost={isTopmost ? "true" : "false"}
       data-snap-point={context.activeSnapPoint}
-      data-dragging={context.isDragging ? "true" : "false"}
-      style={
-        context.open && isTopmost
-          ? { ...context.snapStyle, ...style }
-          : { ...context.snapStyle, ...style, pointerEvents: "none" }
-      }
+      data-dragging={isDragging ? "true" : "false"}
+      style={mergedStyle}
       onKeyDown={(event: React.KeyboardEvent<HTMLDivElement>) => {
         if (onKeyDown) onKeyDown(event);
         if (event.defaultPrevented || event.key !== "Tab" || !context.modal || !isTopmost) return;
@@ -369,6 +387,7 @@ export const DrawerHandle: React.FC<DrawerHandleProps> = ({
   onPointerUp,
   onPointerCancel,
   onKeyDown,
+  style,
   ...props
 }) => {
   const { __scopeDrawer: scope } = useDrawerScope(__scopeDrawer);
@@ -389,6 +408,11 @@ export const DrawerHandle: React.FC<DrawerHandleProps> = ({
       data-state={context.open ? "open" : "closed"}
       data-side={context.side}
       data-snap-point={context.activeSnapPoint}
+      style={{
+        touchAction: "none",
+        userSelect: "none",
+        ...style,
+      }}
       {...context.dragHandleProps}
       onPointerDown={(event: React.PointerEvent<HTMLButtonElement>) => {
         if (onPointerDown) onPointerDown(event);
@@ -435,12 +459,12 @@ export const DrawerClose: React.FC<DrawerCloseProps> = ({ ref, __scopeDrawer, on
       data-state={context.open ? "open" : "closed"}
       onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         if (onClick) onClick(event);
-        if (!event.defaultPrevented) context.setOpen(true);
+        if (!event.defaultPrevented) context.setOpen(false);
       }}
     />
   );
 };
-DrawerTrigger.displayName = COMPONENT_NAME.CLOSE;
+DrawerClose.displayName = COMPONENT_NAME.CLOSE;
 
 export interface DrawerTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
   ref?: React.RefObject<HTMLHeadingElement>;
@@ -463,8 +487,8 @@ export interface DrawerDescriptionProps extends React.HTMLAttributes<HTMLParagra
 
 export const DrawerDescription: React.FC<DrawerDescriptionProps> = ({ ref, __scopeDrawer, ...props }) => {
   const { __scopeDrawer: scope } = useDrawerScope(__scopeDrawer);
-  const { titleId } = useDrawerContext(COMPONENT_NAME.TITLE, scope);
-  return <p {...props} id={props.id ?? titleId} />;
+  const { descriptionId } = useDrawerContext(COMPONENT_NAME.DESCRIPTION, scope);
+  return <p {...props} id={props.id ?? descriptionId} />;
 };
 DrawerDescription.displayName = COMPONENT_NAME.DESCRIPTION;
 

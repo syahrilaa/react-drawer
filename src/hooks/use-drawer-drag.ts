@@ -70,7 +70,14 @@ export const useDrawerDrag = ({
   const enabled = open && snapPoints.length > 0;
   const snapSize = side === "bottom" ? `${currentSnapPoint * 100}vh` : `${currentSnapPoint * 100}vw`;
   const style = enabled
-    ? ({ "--drawer-snap-point": currentSnapPoint, "--drawer-snap-size": snapSize } as React.CSSProperties)
+    ? ({
+        "--drawer-snap-point": currentSnapPoint,
+        "--drawer-snap-size": snapSize,
+        ...(side === "bottom" ? { height: snapSize } : { width: snapSize }),
+      } as React.CSSProperties & {
+        "--drawer-snap-point": number;
+        "--drawer-snap-size": string;
+      })
     : undefined;
 
   const getCoordinate = (event: React.PointerEvent<HTMLButtonElement>) =>
