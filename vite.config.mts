@@ -1,4 +1,5 @@
 import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
@@ -8,6 +9,7 @@ const tsconfigPath = path.resolve(__dirname, "tsconfig.json");
 
 const config = defineConfig({
   plugins: [
+    tailwindcss(),
     react({}),
     dts({
       include: ["src/**/*.{ts,tsx}"],
