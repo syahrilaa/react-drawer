@@ -211,7 +211,7 @@ export const DrawerRoot: React.FC<DrawerRootProps> = (props: ScopedProps<DrawerR
 DrawerRoot.displayName = COMPONENT_NAME.ROOT;
 
 export interface DrawerTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  ref?: React.RefObject<HTMLButtonElement>;
+  ref?: React.RefObject<HTMLButtonElement | null>;
   __scopeDrawer?: DrawerScope;
   asChild?: boolean;
 }
@@ -267,7 +267,7 @@ export const DrawerPortal: React.FC<DrawerPortalProps> = ({
 DrawerPortal.displayName = COMPONENT_NAME.PORTAL;
 
 export interface DrawerOverlayProps extends React.HTMLAttributes<HTMLSpanElement> {
-  ref?: React.ForwardedRef<HTMLSpanElement>;
+  ref?: React.ForwardedRef<HTMLSpanElement | null>;
   __scopeDrawer?: DrawerScope;
   forceMount?: boolean;
 }
@@ -315,7 +315,7 @@ export const DrawerOverlay: React.FC<DrawerOverlayProps> = ({
 DrawerOverlay.displayName = COMPONENT_NAME.OVERLAY;
 
 export interface DrawerContentProps extends React.HTMLAttributes<HTMLDivElement> {
-  ref?: React.RefObject<HTMLDivElement>;
+  ref?: React.RefObject<HTMLDivElement | null>;
   __scopeDrawer?: DrawerScope;
   forceMount?: boolean;
   asChild?: boolean;
@@ -456,7 +456,7 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
 DrawerContent.displayName = COMPONENT_NAME.CONTENT;
 
 export interface DrawerHandleProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  ref?: React.RefObject<HTMLButtonElement>;
+  ref?: React.RefObject<HTMLButtonElement | null>;
   __scopeDrawer?: DrawerScope;
 }
 
@@ -521,7 +521,7 @@ export const DrawerHandle: React.FC<DrawerHandleProps> = ({
 DrawerHandle.displayName = COMPONENT_NAME.HANDLE;
 
 export interface DrawerCloseProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  ref?: React.RefObject<HTMLButtonElement>;
+  ref?: React.RefObject<HTMLButtonElement | null>;
   __scopeDrawer?: DrawerScope;
   asChild?: boolean;
 }
@@ -548,7 +548,7 @@ export const DrawerClose: React.FC<DrawerCloseProps> = ({ ref, __scopeDrawer, on
 DrawerClose.displayName = COMPONENT_NAME.CLOSE;
 
 export interface DrawerTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
-  ref?: React.RefObject<HTMLHeadingElement>;
+  ref?: React.RefObject<HTMLHeadingElement | null>;
   __scopeDrawer?: DrawerScope;
   asChild?: boolean;
 }
@@ -562,7 +562,7 @@ export const DrawerTitle: React.FC<DrawerTitleProps> = ({ ref, __scopeDrawer, as
 DrawerTitle.displayName = COMPONENT_NAME.TITLE;
 
 export interface DrawerDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {
-  ref?: React.RefObject<HTMLHeadingElement>;
+  ref?: React.RefObject<HTMLHeadingElement | null>;
   __scopeDrawer?: DrawerScope;
 }
 
