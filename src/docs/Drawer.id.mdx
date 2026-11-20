@@ -1,0 +1,201 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as DrawerStories from "../drawer.stories";
+
+<Meta title="Dokumentasi/Bahasa Indonesia" />
+
+# React Drawer
+
+`@syahakato/react-drawer` adalah primitive drawer React yang composable dan aksesibel. Mendukung drawer samping, bottom sheet, snap points, nested stack, state terkontrol, dan consumer hooks.
+
+> Paket ini menyediakan behavior dan primitive semantik, bukan tema visual. Styling Tailwind pada contoh hanya dimuat oleh Storybook; consumer perlu menyediakan styling sendiri.
+
+## Instalasi
+
+```sh
+npm install @syahakato/react-drawer
+```
+
+React dan React DOM `^19.0.0` merupakan peer dependency.
+
+## Contoh cepat
+
+```tsx
+import { Drawer } from "@syahakato/react-drawer";
+
+export function AccountDrawer() {
+  return (
+    <Drawer.Root side="right">
+      <Drawer.Trigger className="rounded bg-black px-4 py-2 text-white">
+        Buka akun
+      </Drawer.Trigger>
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+        <Drawer.Content className="fixed inset-y-0 right-0 w-80 overflow-y-auto bg-white p-6 shadow-xl">
+          <Drawer.Title>Akun</Drawer.Title>
+          <Drawer.Description>Kelola preferensi akun.</Drawer.Description>
+          <Drawer.Close>Tutup</Drawer.Close>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+```
+
+`side` dapat berupa `"right"` (default), `"left"`, atau `"bottom"`. Gunakan `Drawer.Portal` agar overlay dan content dirender dekat document body tanpa kehilangan React context.
+
+## Bottom sheet dan snap points
+
+Snap point adalah pecahan viewport, misalnya `0.4` untuk 40% dan `0.9` untuk 90%. Primitive menerima nilai finite dalam rentang `(0, 1]`, menghapus nilai duplikat, lalu mengurutkannya.
+
+```tsx
+<Drawer.Root side="bottom" snapPoints={[0.4, 0.9]} defaultActiveSnapPoint={0.4}>
+  <Drawer.Trigger>Buka filter</Drawer.Trigger>
+  <Drawer.Portal>
+    <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+    <Drawer.Content className="fixed inset-x-0 bottom-0 w-full rounded-t-2xl bg-white">
+      <Drawer.Handle aria-label="Ubah ukuran filter" />
+      <Drawer.Title>Filter</Drawer.Title>
+      <Drawer.Description>Pilih filter yang akan diterapkan.</Drawer.Description>
+      <Drawer.Close>Selesai</Drawer.Close>
+    </Drawer.Content>
+  </Drawer.Portal>
+</Drawer.Root>
+```
+
+Untuk drawer bawah, snap point mengatur tinggi; untuk drawer kiri/kanan, snap point mengatur lebar. `Drawer.Handle` mengaktifkan drag dan resize melalui keyboard. Drag melewati setengah snap point terkecil akan menutup drawer. Tanpa `snapPoints`, handle dinonaktifkan.
+
+Snap point aktif dapat dikelola internal dengan `defaultActiveSnapPoint`, atau dikontrol dengan `activeSnapPoint` dan `onActiveSnapPointChange`.
+
+## State terkontrol
+
+```tsx
+import { useState } from "react";
+import { Drawer } from "@syahakato/react-drawer";
+
+export function ControlledDrawer() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Drawer.Root open={open} onOpenChange={setOpen} side="right">
+      <Drawer.Trigger>Buka preferensi</Drawer.Trigger>
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+        <Drawer.Content className="fixed inset-y-0 right-0 w-80 bg-white p-6">
+          <Drawer.Title>Preferensi</Drawer.Title>
+          <Drawer.Close>Tutup</Drawer.Close>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+```
+
+Tanpa prop `open`, root mengelola state sendiri dengan `defaultOpen`. Default-nya tertutup.
+
+## Consumer hooks
+
+Panggil hook dari komponen yang dirender di dalam `Drawer.Root` yang sesuai. Nested drawer akan memilih root terdekat.
+
+```tsx
+import { useDrawer, useDrawerSnap } from "@syahakato/react-drawer";
+
+function DrawerStatus() {
+  const drawer = useDrawer();
+  const snap = useDrawerSnap();
+
+  return (
+    <output {...drawer.dataAttributes}>
+      {drawer.open ? "Terbuka" : "Tertutup"} · {drawer.side} · snap {snap.activeSnapPoint}
+    </output>
+  );
+}
+```
+
+- `useDrawer()` menyediakan `open`, `setOpen`, `side`, `modal`, `isTopmost`, `stackIndex`, `present`, state snap/drag, dan `dataAttributes`.
+- `useDrawerSnap()` menyediakan `activeSnapPoint`, `snapPoints`, `setActiveSnapPoint`, `isDragging`, dan `dataAttributes` terkait snap.
+- Kedua hook melempar error deskriptif jika digunakan di luar provider drawer.
+
+### Scope eksplisit
+
+Kebanyakan aplikasi tidak membutuhkan scope. Untuk grup yang menggunakan scope eksplisit, buat scope hook dan teruskan nilai `__scopeDrawer` ke root, primitive, dan consumer hook:
+
+```tsx
+import { Drawer, createDrawerScope, useDrawer, type DrawerScope } from "@syahakato/react-drawer";
+
+const useExampleDrawerScope = createDrawerScope();
+
+function DrawerState({ scope }: { scope?: DrawerScope }) {
+  const drawer = useDrawer(scope);
+  return <output>{drawer.open ? "Terbuka" : "Tertutup"}</output>;
+}
+
+function ScopedDrawer() {
+  const scope = useExampleDrawerScope();
+  const drawerScope = scope.__scopeDrawer;
+
+  return (
+    <Drawer.Root {...scope}>
+      <Drawer.Trigger __scopeDrawer={drawerScope}>Buka</Drawer.Trigger>
+      <Drawer.Portal __scopeDrawer={drawerScope}>
+        <Drawer.Overlay __scopeDrawer={drawerScope} />
+        <Drawer.Content __scopeDrawer={drawerScope}>
+          <DrawerState scope={drawerScope} />
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+```
+
+Untuk komposisi biasa gunakan `useDrawer()` yang membaca context terdekat. Scope tidak dipilih berdasarkan title; title dipakai untuk nama aksesibel dialog, bukan identitas.
+
+## API komponen
+
+| Komponen | Kegunaan |
+| --- | --- |
+| `Drawer.Root` | Memiliki state open, side, modal, dan snap point. |
+| `Drawer.Trigger` | Membuka root dan mengatur atribut ARIA dialog. |
+| `Drawer.Portal` | Membuat portal; menerima `container` dan `forceMount`. |
+| `Drawer.Overlay` | Backdrop modal opsional; klik backdrop menutup drawer teratas. |
+| `Drawer.Content` | Konten dialog, pengelolaan fokus, interaksi luar, dan Escape. |
+| `Drawer.Close` | Menutup root yang sesuai. |
+| `Drawer.Title` | Menyediakan nama aksesibel dialog. |
+| `Drawer.Description` | Menyediakan deskripsi aksesibel dialog. |
+| `Drawer.Handle` | Kontrol snap point melalui drag dan keyboard. |
+
+`Drawer.Content` menerima `onEscapeKeyDown`, `onInteractOutside`, `asChild`, dan `forceMount`. Batalkan event yang diberikan untuk mencegah behavior close default.
+
+## Stacking dan nested drawer
+
+Root tingkat atas otomatis berbagi stack provider. Root yang nested menjadi topmost, mendapat z-index lebih tinggi, dan menjadi satu-satunya drawer yang menangani interaksi luar dan Escape. Setelah ditutup, drawer sebelumnya kembali menjadi topmost. `DrawerStackProvider` tersedia jika memerlukan batas stack eksplisit.
+
+Lihat contoh interaktif:
+
+### Playground
+
+<Canvas of={DrawerStories.Playground} />
+
+### Nested drawer dan bottom sheet
+
+<Canvas of={DrawerStories.NestedDrawer} />
+
+### Nested bottom sheets
+
+<Canvas of={DrawerStories.NestedBottomSheets} />
+
+### Stacked cards
+
+<Canvas of={DrawerStories.StackedCards} />
+
+## Checklist aksesibilitas dan styling
+
+- Sertakan `Drawer.Title` yang terlihat; tambahkan `Drawer.Description` bila membantu.
+- Pertahankan indikator fokus yang terlihat dan pastikan konten panjang bisa di-scroll.
+- Gunakan `aria-label` yang deskriptif pada `Drawer.Handle`.
+- Escape menutup drawer teratas. Interaksi pointer di luar konten menutup drawer kecuali `onInteractOutside` membatalkan event.
+- Mode modal aktif secara default. Gunakan `modal={false}` hanya jika memang membutuhkan behavior non-modal.
+- Styling semua primitive sesuai design system. CSS global dan setup Tailwind Storybook tidak disertakan dalam paket npm.
+
+## Informasi lebih lanjut
+
+Lihat [README Bahasa Indonesia](../../README.id.md) atau [dokumentasi English](./Drawer.en.mdx).

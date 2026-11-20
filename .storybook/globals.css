@@ -1,1 +1,112 @@
 @import "tailwindcss";
+
+@layer base {
+  @theme inline {
+    --duration-normal: 250ms;
+
+    --ease-linear: cubic-bezier(0, 0, 1, 1);
+    --ease-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+    --ease-in: cubic-bezier(0.42, 0, 1, 1);
+    --ease-out: cubic-bezier(0, 0, 0.58, 1);
+    --ease-in-out: cubic-bezier(0.42, 0, 0.58, 1);
+    --ease-expressive: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@theme inline {
+  --animate-scale-in: scale-in var(--tw-duration, var(--duration-normal)) var(--tw-ease, var(--ease-spring-soft));
+  --animate-scale-out: scale-out var(--tw-duration, var(--duration-normal)) var(--tw-ease, var(--ease-expressive));
+
+  --animate-slide-in-from-bottom-full: slide-in-from-bottom-full var(--tw-duration, var(--duration-normal))
+    var(--tw-ease, var(--ease-expressive));
+  --animate-slide-out-to-bottom-full: slide-out-to-bottom-full var(--tw-duration, var(--duration-normal))
+    var(--tw-ease, var(--ease-expressive));
+
+  --animate-slide-in-from-left-full: slide-in-from-left-full var(--tw-duration, var(--duration-normal))
+    var(--tw-ease, var(--ease-expressive));
+  --animate-slide-out-to-left-full: slide-out-to-left-full var(--tw-duration, var(--duration-normal))
+    var(--tw-ease, var(--ease-expressive));
+
+  --animate-slide-in-from-right-full: slide-in-from-right-full var(--tw-duration, var(--duration-normal))
+    var(--tw-ease, var(--ease-expressive));
+  --animate-slide-out-to-right-full: slide-out-to-right-full var(--tw-duration, var(--duration-normal))
+    var(--tw-ease, var(--ease-expressive));
+}
+
+@layer utilities {
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes scale-out {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+  }
+
+  @keyframes slide-in-from-bottom-full {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-out-to-bottom-full {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(100%);
+    }
+  }
+
+  @keyframes slide-in-from-left-full {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-out-to-left-full {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  @keyframes slide-in-from-right-full {
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slide-out-to-right-full {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+}

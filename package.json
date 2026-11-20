@@ -4,6 +4,28 @@
   "private": false,
   "author": "Syahril Akbar Atthoriq <syahrilakbaraa@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/syahrilaa/react-drawer.git"
+  },
+  "homepage": "https://github.com/syahrilaa/react-drawer#readme",
+  "bugs": {
+    "url": "https://github.com/syahrilaa/react-drawer/issues"
+  },
+  "keywords": [
+    "react",
+    "drawer",
+    "bottom-sheet",
+    "dialog",
+    "typescript",
+    "accessible"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "README.id.md",
+    "LICENSE"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -15,14 +37,18 @@
     }
   },
   "scripts": {
-    "build": "bun run check-types && vite build",
+    "build": "tsc --noEmit && vite build",
     "check-types": "tsc --noEmit",
     "format": "biome format --write .",
     "lint": "biome check --write .",
     "check": "biome check .",
+    "prepack": "npm run build",
     "prepare": "husky",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
@@ -50,7 +76,7 @@
     "react-dom": "^19.0.0"
   },
   "engines": {
-    "node": ">24"
+    "node": ">=22.12.0"
   },
   "packageManager": "bun@1.4.4",
   "dependencies": {

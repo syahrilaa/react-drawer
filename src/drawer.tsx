@@ -15,14 +15,48 @@ import { getFocusableElements, useIsomorphicLayoutEffect } from "./utils";
 type ScopedProps<Props> = Props & { __scopeDrawer?: DrawerScope };
 export type DrawerSide = "right" | "left" | "bottom";
 
-const [createDrawerContext, createDrawerScope] = createDrawerContextScope(COMPONENT_NAME.ROOT);
+const [createDrawerContext, createDrawerScopeFactory] = createDrawerContextScope(COMPONENT_NAME.ROOT);
+export const createDrawerScope = createDrawerScopeFactory;
 const useDrawerScope = createDrawerScope();
+
+export interface DrawerDataAttributes {
+  "data-state": "open" | "closed";
+  "data-side": DrawerSide;
+  "data-topmost": "true" | "false";
+  "data-stack-index": number;
+  "data-snap-point": DrawerSnapPoint;
+  "data-dragging": "true" | "false";
+}
+
+export interface DrawerState {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  side: DrawerSide;
+  modal: boolean;
+  isTopmost: boolean;
+  stackIndex: number;
+  present: boolean;
+  activeSnapPoint: DrawerSnapPoint;
+  setActiveSnapPoint: (snapPoint: DrawerSnapPoint) => void;
+  snapPoints: DrawerSnapPoint[];
+  isDragging: boolean;
+  dataAttributes: DrawerDataAttributes;
+}
+
+export interface DrawerSnapState {
+  activeSnapPoint: DrawerSnapPoint;
+  setActiveSnapPoint: (snapPoint: DrawerSnapPoint) => void;
+  snapPoints: DrawerSnapPoint[];
+  isDragging: boolean;
+  dataAttributes: Pick<DrawerDataAttributes, "data-snap-point" | "data-dragging">;
+}
 
 interface DrawerContextValue {
   open: boolean;
   modal: boolean;
   side: DrawerSide;
   setOpen: (open: boolean) => void;
+  setActiveSnapPoint: (snapPoint: DrawerSnapPoint) => void;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
   contentRef: React.RefObject<HTMLDivElement | null>;
   overlayRef: React.RefObject<HTMLDivElement | null>;
@@ -41,8 +75,53 @@ interface DrawerContextValue {
 
 const [DrawerProvider, useDrawerContext] = createDrawerContext<DrawerContextValue>(COMPONENT_NAME.ROOT);
 
+export const useDrawer = (__scopeDrawer?: DrawerScope): DrawerState => {
+  const { __scopeDrawer: scope } = useDrawerScope(__scopeDrawer);
+  const context = useDrawerContext(COMPONENT_NAME.ROOT, scope);
+  const state = context.open ? "open" : "closed";
+  const topmost = context.isTopmost ? "true" : "false";
+  const dragging = context.isDragging ? "true" : "false";
+
+  return {
+    open: context.open,
+    setOpen: context.setOpen,
+    side: context.side,
+    modal: context.modal,
+    isTopmost: context.isTopmost,
+    stackIndex: context.stackIndex,
+    present: context.present,
+    activeSnapPoint: context.activeSnapPoint,
+    setActiveSnapPoint: context.setActiveSnapPoint,
+    snapPoints: context.snapPoints,
+    isDragging: context.isDragging,
+    dataAttributes: {
+      "data-state": state,
+      "data-side": context.side,
+      "data-topmost": topmost,
+      "data-stack-index": context.stackIndex,
+      "data-snap-point": context.activeSnapPoint,
+      "data-dragging": dragging,
+    },
+  };
+};
+
+export const useDrawerSnap = (__scopeDrawer?: DrawerScope): DrawerSnapState => {
+  const drawer = useDrawer(__scopeDrawer);
+  return {
+    activeSnapPoint: drawer.activeSnapPoint,
+    setActiveSnapPoint: drawer.setActiveSnapPoint,
+    snapPoints: drawer.snapPoints,
+    isDragging: drawer.isDragging,
+    dataAttributes: {
+      "data-snap-point": drawer.activeSnapPoint,
+      "data-dragging": drawer.isDragging ? "true" : "false",
+    },
+  };
+};
+
 export interface DrawerRootProps {
   children: React.ReactNode;
+  __scopeDrawer?: DrawerScope;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -98,6 +177,7 @@ export const DrawerRootImplementation: React.FC<DrawerRootProps> = ({
       modal={modal}
       side={side}
       setOpen={setOpen}
+      setActiveSnapPoint={drag.setActiveSnapPoint}
       triggerRef={triggerRef}
       contentRef={contentRef}
       overlayRef={overlayRef}
@@ -323,6 +403,7 @@ export const DrawerContent: React.FC<DrawerContentProps> = ({
     ...style,
     ...snapStyle,
     transition: snapTransition,
+    animationFillMode: context.open ? style?.animationFillMode : "forwards",
     pointerEvents: context.open && isTopmost ? (style?.pointerEvents ?? "auto") : "none",
   };
 
@@ -504,5 +585,6 @@ export const Drawer = Object.assign(DrawerRoot, {
   Handle: DrawerHandle,
 });
 
+export type { DrawerScope } from "./hooks/create-scoped-context";
 export type { DrawerDragHandleProps, DrawerSnapPoint } from "./hooks/use-drawer-drag";
 export { DrawerStackProvider } from "./hooks/use-drawer-stack";

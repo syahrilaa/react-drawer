@@ -1,0 +1,201 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks";
+import * as DrawerStories from "../drawer.stories";
+
+<Meta title="Documentation/English" />
+
+# React Drawer
+
+`@syahakato/react-drawer` is a composable, accessible drawer primitive for React. It supports side drawers, bottom sheets, snap points, nested stacks, controlled state, and consumer hooks.
+
+> The package provides behavior and semantic primitives, not a visual theme. The Tailwind styles in these examples are loaded by Storybook only; consumers provide their own styles.
+
+## Installation
+
+```sh
+npm install @syahakato/react-drawer
+```
+
+React and React DOM `^19.0.0` are peer dependencies.
+
+## Quick start
+
+```tsx
+import { Drawer } from "@syahakato/react-drawer";
+
+export function AccountDrawer() {
+  return (
+    <Drawer.Root side="right">
+      <Drawer.Trigger className="rounded bg-black px-4 py-2 text-white">
+        Open account
+      </Drawer.Trigger>
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+        <Drawer.Content className="fixed inset-y-0 right-0 w-80 overflow-y-auto bg-white p-6 shadow-xl">
+          <Drawer.Title>Account</Drawer.Title>
+          <Drawer.Description>Manage account preferences.</Drawer.Description>
+          <Drawer.Close>Close</Drawer.Close>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+```
+
+`side` may be `"right"` (the default), `"left"`, or `"bottom"`. Use `Drawer.Portal` to place the overlay and content near the document body while preserving React context.
+
+## Bottom sheet and snap points
+
+Snap points are fractions of the viewport, such as `0.4` for 40% and `0.9` for 90%. The primitive accepts finite values in `(0, 1]`, removes duplicates, and sorts them.
+
+```tsx
+<Drawer.Root side="bottom" snapPoints={[0.4, 0.9]} defaultActiveSnapPoint={0.4}>
+  <Drawer.Trigger>Open filters</Drawer.Trigger>
+  <Drawer.Portal>
+    <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+    <Drawer.Content className="fixed inset-x-0 bottom-0 w-full rounded-t-2xl bg-white">
+      <Drawer.Handle aria-label="Resize filters" />
+      <Drawer.Title>Filters</Drawer.Title>
+      <Drawer.Description>Choose the filters to apply.</Drawer.Description>
+      <Drawer.Close>Done</Drawer.Close>
+    </Drawer.Content>
+  </Drawer.Portal>
+</Drawer.Root>
+```
+
+For a bottom drawer, points control height; for left/right drawers, they control width. `Drawer.Handle` enables dragging and keyboard resizing. Dragging below half the smallest snap point closes the drawer. Without `snapPoints`, the handle is disabled.
+
+The active point can be uncontrolled with `defaultActiveSnapPoint`, or controlled with `activeSnapPoint` and `onActiveSnapPointChange`.
+
+## Controlled open state
+
+```tsx
+import { useState } from "react";
+import { Drawer } from "@syahakato/react-drawer";
+
+export function ControlledDrawer() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Drawer.Root open={open} onOpenChange={setOpen} side="right">
+      <Drawer.Trigger>Open preferences</Drawer.Trigger>
+      <Drawer.Portal>
+        <Drawer.Overlay className="fixed inset-0 bg-black/40" />
+        <Drawer.Content className="fixed inset-y-0 right-0 w-80 bg-white p-6">
+          <Drawer.Title>Preferences</Drawer.Title>
+          <Drawer.Close>Close</Drawer.Close>
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+```
+
+Without `open`, the root manages its own state using `defaultOpen`. The default is closed.
+
+## Consumer hooks
+
+Call hooks from a component rendered inside its matching `Drawer.Root`. Nested drawers resolve to the nearest root.
+
+```tsx
+import { useDrawer, useDrawerSnap } from "@syahakato/react-drawer";
+
+function DrawerStatus() {
+  const drawer = useDrawer();
+  const snap = useDrawerSnap();
+
+  return (
+    <output {...drawer.dataAttributes}>
+      {drawer.open ? "Open" : "Closed"} · {drawer.side} · snap {snap.activeSnapPoint}
+    </output>
+  );
+}
+```
+
+- `useDrawer()` returns `open`, `setOpen`, `side`, `modal`, `isTopmost`, `stackIndex`, `present`, snap state, drag state, and `dataAttributes`.
+- `useDrawerSnap()` returns `activeSnapPoint`, `snapPoints`, `setActiveSnapPoint`, `isDragging`, and snap-related `dataAttributes`.
+- Both hooks throw a descriptive error when used outside a drawer provider.
+
+### Explicit scope
+
+Most applications do not need a scope. When composing an explicitly scoped group, create a scope hook and pass its `__scopeDrawer` value to the root, primitives, and consumer hook:
+
+```tsx
+import { Drawer, createDrawerScope, useDrawer, type DrawerScope } from "@syahakato/react-drawer";
+
+const useExampleDrawerScope = createDrawerScope();
+
+function DrawerState({ scope }: { scope?: DrawerScope }) {
+  const drawer = useDrawer(scope);
+  return <output>{drawer.open ? "Open" : "Closed"}</output>;
+}
+
+function ScopedDrawer() {
+  const scope = useExampleDrawerScope();
+  const drawerScope = scope.__scopeDrawer;
+
+  return (
+    <Drawer.Root {...scope}>
+      <Drawer.Trigger __scopeDrawer={drawerScope}>Open</Drawer.Trigger>
+      <Drawer.Portal __scopeDrawer={drawerScope}>
+        <Drawer.Overlay __scopeDrawer={drawerScope} />
+        <Drawer.Content __scopeDrawer={drawerScope}>
+          <DrawerState scope={drawerScope} />
+        </Drawer.Content>
+      </Drawer.Portal>
+    </Drawer.Root>
+  );
+}
+```
+
+Use the nearest-context form `useDrawer()` for normal composition. Scope is not selected by title; titles are for accessible dialog naming, not identity.
+
+## Component API
+
+| Component | Purpose |
+| --- | --- |
+| `Drawer.Root` | Owns open, side, modal, and snap-point state. |
+| `Drawer.Trigger` | Opens the root; sets dialog and expanded ARIA attributes. |
+| `Drawer.Portal` | Portals children; accepts `container` and `forceMount`. |
+| `Drawer.Overlay` | Optional modal backdrop; clicking it closes the topmost drawer. |
+| `Drawer.Content` | Dialog content, focus management, outside interaction, and Escape handling. |
+| `Drawer.Close` | Closes its matching root. |
+| `Drawer.Title` | Provides the accessible dialog name. |
+| `Drawer.Description` | Provides the accessible dialog description. |
+| `Drawer.Handle` | Drag and keyboard snap-point control. |
+
+`Drawer.Content` accepts `onEscapeKeyDown`, `onInteractOutside`, `asChild`, and `forceMount`. Prevent the supplied event to cancel the default close behavior.
+
+## Stacking and nested drawers
+
+Top-level roots automatically share a stack provider. A nested root becomes topmost, receives a higher z-index, and is the only drawer that handles outside interaction and Escape. Closing it restores the previous drawer as topmost. `DrawerStackProvider` is exported for explicit stack boundaries.
+
+See the interactive examples:
+
+### Playground
+
+<Canvas of={DrawerStories.Playground} />
+
+### Nested drawer and bottom sheet
+
+<Canvas of={DrawerStories.NestedDrawer} />
+
+### Nested bottom sheets
+
+<Canvas of={DrawerStories.NestedBottomSheets} />
+
+### Stacked cards
+
+<Canvas of={DrawerStories.StackedCards} />
+
+## Accessibility and styling checklist
+
+- Include a visible `Drawer.Title`; add `Drawer.Description` when helpful.
+- Keep focus indicators visible and make long content scrollable.
+- Use a descriptive `aria-label` on `Drawer.Handle`.
+- Escape closes the topmost drawer. Outside pointer interaction closes it unless `onInteractOutside` prevents the event.
+- Modal mode is enabled by default. Set `modal={false}` only when non-modal behavior is intended.
+- Style every primitive for your design system. Storybook's global CSS and Tailwind setup are not part of the published package.
+
+## More information
+
+See the [English README](../../README.md) or [Indonesian documentation](./Drawer.id.mdx).

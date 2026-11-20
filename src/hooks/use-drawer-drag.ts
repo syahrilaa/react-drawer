@@ -69,16 +69,17 @@ export const useDrawerDrag = ({
   const currentSnapPoint = dragSnapPoint ?? resolvedSnapPoint;
   const enabled = open && snapPoints.length > 0;
   const snapSize = side === "bottom" ? `${currentSnapPoint * 100}vh` : `${currentSnapPoint * 100}vw`;
-  const style = enabled
-    ? ({
-        "--drawer-snap-point": currentSnapPoint,
-        "--drawer-snap-size": snapSize,
-        ...(side === "bottom" ? { height: snapSize } : { width: snapSize }),
-      } as React.CSSProperties & {
-        "--drawer-snap-point": number;
-        "--drawer-snap-size": string;
-      })
-    : undefined;
+  const style =
+    snapPoints.length > 0
+      ? ({
+          "--drawer-snap-point": currentSnapPoint,
+          "--drawer-snap-size": snapSize,
+          ...(side === "bottom" ? { height: snapSize } : { width: snapSize }),
+        } as React.CSSProperties & {
+          "--drawer-snap-point": number;
+          "--drawer-snap-size": string;
+        })
+      : undefined;
 
   const getCoordinate = (event: React.PointerEvent<HTMLButtonElement>) =>
     side === "bottom" ? event.clientY : event.clientX;
@@ -88,6 +89,7 @@ export const useDrawerDrag = ({
   const snapToNearestPoint = (point: number) => {
     const minimum = snapPoints[0];
     if (minimum !== undefined && point < minimum / 2) {
+      setDragSnapPoint(point);
       onOpenChangeRef.current(false);
       return;
     }
@@ -136,9 +138,11 @@ export const useDrawerDrag = ({
   });
 
   React.useEffect(() => {
-    if (enabled) return;
+    if (enabled) {
+      setDragSnapPoint(null);
+      return;
+    }
     dragStartRef.current = null;
-    setDragSnapPoint(null);
   }, [enabled]);
 
   const onKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (event) => {
@@ -157,6 +161,7 @@ export const useDrawerDrag = ({
 
   return {
     activeSnapPoint: resolvedSnapPoint,
+    setActiveSnapPoint,
     dragHandleProps: {
       ...pointerDrag.dragProps,
       onKeyDown,
